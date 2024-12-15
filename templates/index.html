@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Malar's API Client</title>
+    <style>
+       body { font-family: sans-serif; }
+       .form-group { margin-bottom: 10px; }
+       .response-area { margin-top: 20px; border: 1px solid #ddd; padding: 10px; white-space: pre-wrap; }
+       .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Malar's API Client</h1>
+    <div>
+    <h2>Create/Update Item</h2>
+    <div class="form-group">
+    <label for="id">Item ID (Leave blank to create a new item):</label>
+            <input type="number" id="id" placeholder="Optional" >
+        </div>
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" placeholder="Item Name">
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <input type="text" id="description" placeholder="Item Description">
+        </div>
+        <button onclick="createOrUpdateItem()">Create/Update</button>
+
+    </div>
+    <div>
+      <h2>Get Items</h2>
+      <button onclick="getItems()">Get Items</button>
+    </div>
+
+     <div>
+      <h2>Get Item by ID</h2>
+      <label for="getItemID">Item ID:</label>
+      <input type="number" id="getItemID" placeholder="Item ID">
+      <button onclick="getItem()">Get Item</button>
+    </div>
+
+      <div>
+      <h2>Delete Item by ID</h2>
+      <label for="deleteItemID">Item ID:</label>
+      <input type="number" id="deleteItemID" placeholder="Item ID">
+      <button onclick="deleteItem()">Delete Item</button>
+    </div>
+
+    <h2>Response:</h2>
+    <pre class="response-area"></pre>
+    <pre class="error"></pre>
+
+<script>
+ const responseArea = document.querySelector('.response-area');
+  const errorArea = document.querySelector('.error');
+
+  function displayResponse(response, isError = false) {
+     if (isError) {
+        errorArea.textContent = JSON.stringify(response, null, 2);
+     } else {
+        responseArea.textContent = JSON.stringify(response, null, 2);
+        errorArea.textContent = "";
+     }
+  }
+
+    async function getItems() {
+      try {
+        const response = await fetch('/api/items', {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          displayResponse(error, true);
+          return
+        }
+        const data = await response.json();
+        displayResponse(data);
+
+      } catch (error) {
+        displayResponse({ message: 'Network error or Server Down' }, true);
+      }
+    }
+
+    async function getItem() {
+      const itemId = document.getElementById('getItemID').value;
+        if (!itemId) {
+            displayResponse({message: 'Item ID cannot be empty'}, true)
+            return
+        }
+
+      try {
+        const response = await fetch(`/api/items/${itemId}`, {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          displayResponse(error, true);
+          return
+        }
+        const data = await response.json();
+        displayResponse(data);
+
+      } catch (error) {
+        displayResponse({ message: 'Network error or Server Down' }, true);
+      }
+    }
+
+
+    async function createOrUpdateItem() {
+      const id = document.getElementById('id').value;
+      const name = document.getElementById('name').value;
+      const description = document.getElementById('description').value;
+
+     if (!name || !description) {
+       displayResponse({message: 'Name or Description cannot be empty'}, true)
+      return
+     }
+
+
+      const itemData = { name: name, description: description };
+      let apiUrl = '/api/items';
+      let method = 'POST';
+      if (id) {
+         itemData['id'] = parseInt(id)
+        apiUrl = `/api/items/${id}`;
+        method = 'PUT';
+      }
+
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(itemData),
+        });
+            if (!response.ok) {
+          const error = await response.json();
+           displayResponse(error, true);
+            return
+        }
+
+         const data = await response.json();
+        displayResponse(data);
+
+
+      } catch (error) {
+        displayResponse({ message: 'Network error or Server Down' }, true);
+      }
+    }
+
+
+   async function deleteItem() {
+        const itemId = document.getElementById('deleteItemID').value;
+       if (!itemId) {
+            displayResponse({message: 'Item ID cannot be empty'}, true)
+            return
+        }
+      try {
+        const response = await fetch(`/api/items/${itemId}`, {
+          method: 'DELETE',
+        });
+         if (!response.ok) {
+           const error = await response.json();
+          displayResponse(error, true);
+           return
+        }
+        const data = await response.json();
+        displayResponse(data);
+      } catch (error) {
+        displayResponse({ message: 'Network error or Server Down' }, true);
+      }
+    }
+
+
+</script>
+</body>
+</html>
